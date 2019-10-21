@@ -43,26 +43,26 @@ export function load (options, str) {
     var fs = require('fs')
     if (caching !== false) {
       if (!cache.hasOwnProperty(filePath)) {
-        cache[filePath] = C(fs.readFileSync(filePath, 'utf8'))
+        cache[filePath] = C(fs.readFileSync(filePath, 'utf8')).compile
       }
       return cache[filePath]
     } else {
-      return C(fs.readFileSync(filePath, 'utf8'))
+      return C(fs.readFileSync(filePath, 'utf8')).compile
     }
   } else if (typeof str === 'string') {
     // If str is passed in
     if (name && caching !== false) {
       if (!cache.hasOwnProperty(name)) {
-        cache[name] = C(str)
+        cache[name] = C(str).compile
       }
       return cache[name]
     } else if (caching === true) {
       if (!cache.hasOwnProperty(str)) {
-        cache[str] = C(str)
+        cache[str] = C(str).compile
       }
       return cache[str]
     } else {
-      return C(str)
+      return C(str).compile
     }
   } else if (name && caching !== false && cache.hasOwnProperty(name)) {
     // If only name is passed in and it exists in cache

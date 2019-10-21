@@ -29,6 +29,7 @@
   */};
 
   var initialRegEx = /{{ *?(?:(?:([\w$]+) *?\((.*?)\) *?([\w$]*))|(?:([\w$]+) *?\((.*?)\) *?\/)|(?:([\w$@].*?) *?((?:\| *?[\w$]+ *)*))|(?:\/ *?([\w$]+))|(?:# *?([\w$]+))|(?:!--[^]+?--)) *?}}\n?/g;
+  var conditionVarRegEx = /options.(\w+)/g;
   var initialTags = {
     s: '{{',
     e: '}}'
@@ -283,6 +284,7 @@
     var helperAutoId = 0; // Squirrelly automatically generates an ID for helpers that don't have a custom ID
     var helperContainsBlocks = {}; // If a helper contains any blocks, helperContainsBlocks[helperID] will be set to true
     var m;
+    var tokens = [];
 
     function addString (indx) {
       if (lastIndex !== indx) {
@@ -296,6 +298,7 @@
       }
     }
     function ref (content, filters) {
+      tokens.push(content);
       // console.log('refcontent: ' + content)
       // console.log('filters: ' + filters)
       var replaced = replaceHelperRefs(content, helperArray, helperNumber);
@@ -322,6 +325,8 @@
         helperNumber += 1;
         var params = m[2] || '';
         params = replaceHelperRefs(params, helperArray, helperNumber);
+        var conditionVar = conditionVarRegEx.exec(params)[1];
+        tokens.push(conditionVar);
         // console.log(params)
         if (!native) {
           params = '[' + params + ']';
@@ -433,7 +438,8 @@
       'Sqrl',
       funcStr.replace(/\n/g, '\\n').replace(/\r/g, '\\r')
     );
-    return func
+    // console.log(tokens)
+    return { compile: func, tokens: tokens }
   }
 
   function defineFilter (name, callback) {
@@ -475,26 +481,26 @@
       var fs = require('fs');
       if (caching !== false) {
         if (!cache.hasOwnProperty(filePath)) {
-          cache[filePath] = Compile(fs.readFileSync(filePath, 'utf8'));
+          cache[filePath] = Compile(fs.readFileSync(filePath, 'utf8')).compile;
         }
         return cache[filePath]
       } else {
-        return Compile(fs.readFileSync(filePath, 'utf8'))
+        return Compile(fs.readFileSync(filePath, 'utf8')).compile
       }
     } else if (typeof str === 'string') {
       // If str is passed in
       if (name && caching !== false) {
         if (!cache.hasOwnProperty(name)) {
-          cache[name] = Compile(str);
+          cache[name] = Compile(str).compile;
         }
         return cache[name]
       } else if (caching === true) {
         if (!cache.hasOwnProperty(str)) {
-          cache[str] = Compile(str);
+          cache[str] = Compile(str).compile;
         }
         return cache[str]
       } else {
-        return Compile(str)
+        return Compile(str).compile
       }
     } else if (name && caching !== false && cache.hasOwnProperty(name)) {
       // If only name is passed in and it exists in cache

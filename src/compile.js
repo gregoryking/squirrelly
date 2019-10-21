@@ -1,4 +1,4 @@
-import { regEx, setup, replaceHelperRefs } from './regexps'
+import { regEx, conditionVarRegEx, setup, replaceHelperRefs } from './regexps'
 import nativeHelpers from './nativeHelpers'
 import { parseFiltered } from './filters'
 import P from './partials'
@@ -11,6 +11,7 @@ function Compile (str) {
   var helperAutoId = 0 // Squirrelly automatically generates an ID for helpers that don't have a custom ID
   var helperContainsBlocks = {} // If a helper contains any blocks, helperContainsBlocks[helperID] will be set to true
   var m
+  var tokens = []
 
   function addString (indx) {
     if (lastIndex !== indx) {
@@ -24,6 +25,7 @@ function Compile (str) {
     }
   }
   function ref (content, filters) {
+    tokens.push(content)
     // console.log('refcontent: ' + content)
     // console.log('filters: ' + filters)
     var replaced = replaceHelperRefs(content, helperArray, helperNumber)
@@ -50,6 +52,8 @@ function Compile (str) {
       helperNumber += 1
       var params = m[2] || ''
       params = replaceHelperRefs(params, helperArray, helperNumber)
+      var conditionVar = conditionVarRegEx.exec(params)[1];
+      tokens.push(conditionVar)
       // console.log(params)
       if (!native) {
         params = '[' + params + ']'
@@ -161,7 +165,8 @@ function Compile (str) {
     'Sqrl',
     funcStr.replace(/\n/g, '\\n').replace(/\r/g, '\\r')
   )
-  return func
+  // console.log(tokens)
+  return { compile: func, tokens: tokens }
 }
 
 export default Compile

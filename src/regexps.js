@@ -1,4 +1,5 @@
 export var initialRegEx = /{{ *?(?:(?:([\w$]+) *?\((.*?)\) *?([\w$]*))|(?:([\w$]+) *?\((.*?)\) *?\/)|(?:([\w$@].*?) *?((?:\| *?[\w$]+ *)*))|(?:\/ *?([\w$]+))|(?:# *?([\w$]+))|(?:!--[^]+?--)) *?}}\n?/g
+export var conditionVarRegEx = /options.(\w+)/g
 export var initialTags = {
   s: '{{',
   e: '}}'
